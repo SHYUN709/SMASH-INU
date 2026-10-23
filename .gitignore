@@ -1,0 +1,16 @@
+# 파이썬
+__pycache__/
+*.pyc
+
+# 운영체제
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 비밀 값 (service_role 키 등은 절대 올리지 않기)
+.env
+.env.*
+
+# 편집기
+.vscode/
+.idea/
