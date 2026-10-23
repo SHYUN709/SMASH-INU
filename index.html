@@ -100,7 +100,17 @@ dialog::before { content: ""; display: block; height: 7px; background: repeating
 dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
 /* 미니 랭킹: 도구판 바로 위 한 줄, 누르면 위로 전체 순위가 펼쳐짐 (게임은 계속 할 수 있음) */
 .mini { position: fixed; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 20px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + var(--dock-h, 112px) + 6px); }
-.minibar { appearance: none; width: 100%; display: flex; align-items: center; gap: 8px; border: 0; background: var(--panel); color: var(--paper); font: 800 12px/1 var(--text); padding: 8px 10px; border-radius: 8px; cursor: pointer; text-align: left; }
+.minibar { appearance: none; width: 100%; display: block; position: relative; overflow: hidden; border: 0; background: var(--panel); color: var(--paper); font: 800 12px/1 var(--text); padding: 7px 10px 8px; border-radius: 8px; cursor: pointer; text-align: left; }
+.minibar .r1 { display: flex; align-items: center; gap: 8px; }
+.minibar .r2 { display: flex; align-items: center; gap: 8px; margin-top: 5px; font: 700 10.5px/1 var(--text); color: rgba(244,245,242,.48); white-space: nowrap; min-height: 11px; }
+.minibar .wait { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: rgba(242,194,48,.8); }
+.minibar .tick { flex: none; margin-left: auto; font-variant-numeric: tabular-nums; }
+.minibar .tick.fail { color: #ff9a85; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.minibar .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(244,245,242,.08); }
+.minibar .prog i { display: block; height: 100%; width: 0; background: rgba(242,194,48,.5); }
+.minibar .mine.bump { animation: bump .35s ease-out; }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.fly { position: fixed; z-index: 4; pointer-events: none; font: 400 15px/1 var(--display); color: var(--hazard); text-shadow: 0 1px 0 var(--ink); }
 .minibar:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
 .minibar .podium { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .minibar .podium b { font: 400 13px/1 var(--display); color: var(--hazard); margin-right: 3px; }
@@ -178,7 +188,9 @@ dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-vis
     <div class="me"><span>오늘 내 점수 <b id="myToday">0</b></span><button id="boardMe" type="button">내 정보</button></div>
   </div>
   <button type="button" class="minibar" id="miniBar" aria-expanded="false" aria-controls="miniPanel">
-    <span class="podium" id="podium"></span><span class="mine" id="miniMine"></span><span class="chev" aria-hidden="true">▲</span>
+    <span class="r1"><span class="podium" id="podium"></span><span class="mine" id="miniMine"></span><span class="chev" aria-hidden="true">▲</span></span>
+    <span class="r2"><span class="wait" id="miniWait"></span><span class="tick" id="miniTick"></span></span>
+    <span class="prog" aria-hidden="true"><i id="miniProg"></i></span>
   </button>
 </div>
 
@@ -1137,30 +1149,57 @@ setInterval(() => {
   if (d !== Sync.day) {   // 자정(한국 시간)이 지나면 새 날. 아직 안 보낸 몫은 새 날 점수로 보냄
     Sync.day = d; score = 0; Rank.mine = 0; Rank.colleges = []; Rank.myRank = 0;
     if (Rank.kind === 'claude') subscribeClaude();
-    renderBoard(); pollSoon();
+    renderBoard(); schedTick(jitter(5000, 5000));   // 모두 자정에 한꺼번에 몰리지 않게
   }
   saveToday();
 }, 1000);
 
+// 쌓인 점수를 보냄. 성공(또는 보낼 게 없음)이면 true, 실패면 false
 async function flush(final) {
-  if (!Rank.kind || !Sync.on || Sync.pending <= 0 || (Sync.busy && !final)) return;
+  if (!Rank.kind || !Sync.on || Sync.pending <= 0 || (Sync.busy && !final)) return true;
   const pts = Math.min(Sync.pending, SEND_MAX);   // 오래 못 보내 쌓였으면 나눠서 보냄
   Sync.pending -= pts; Sync.busy = true; saveToday();
+  if (!final) flyPoints(pts);
   try {
     await rankAdd(pts, final);
+    return true;
   } catch (e) {
     Sync.pending += pts;   // 실패한 점수는 버리지 않고 다음 전송에 합침
+    return false;
   } finally {
     Sync.busy = false;
   }
 }
-function schedSync() {
-  clearTimeout(Sync.t);
-  Sync.t = setTimeout(() => { if (!document.hidden) flush(false); schedSync(); }, jitter(30000, 6000));
+
+// 갱신 타이머는 하나: 때가 되면 쌓인 점수를 보내고(참가 중일 때), 그 응답에 담긴 순위표로 바로 갱신.
+// 참가 안 함이거나 보낼 점수가 없으면 조회만. 평소 30초(±6초), 전체 순위를 펼치면 10초(±1.5초)
+const Tick = { t: 0, at: 0, state: 'wait', since: 0 };
+const tickPeriod = () => $('#miniPanel').hidden ? jitter(30000, 6000) : jitter(10000, 1500);
+function schedTick(ms) {
+  clearTimeout(Tick.t);
+  Tick.at = 0;
+  if (!Rank.kind || document.hidden) { renderTick(); return; }   // 숨겨지면 쉼
+  const d = Math.max(0, ms != null ? ms : tickPeriod());
+  Tick.at = Date.now() + d;   // 표시는 이 실제 시각 기준
+  Tick.t = setTimeout(runTick, d);
+  fillBar(d); renderTick();
+}
+async function runTick() {
+  clearTimeout(Tick.t); Tick.at = 0;
+  if (!Rank.kind || document.hidden) return;
+  setTickState('busy');
+  let ok;
+  try {
+    if (Sync.on && Sync.pending > 0) ok = await flush(false);          // 응답에 순위표가 같이 옴
+    else { if (Rank.kind === 'supabase') await sbLoad(); ok = true; }  // claude.ai는 실시간 구독이라 조회 생략
+  } catch (e) { ok = false; }
+  setTickState(ok ? 'done' : 'fail');
+  schedTick();
 }
 // 탭을 숨기거나 창을 닫을 때 남은 점수를 보냄. Supabase는 apikey 헤더가 필요해서 sendBeacon 대신 fetch keepalive
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { flush(true); saveToday(); } else pollSoon();
+  if (document.hidden) { schedTick(); flush(true); saveToday(); }
+  else if (Rank.kind) runTick();   // 다시 보이면 바로 한 번 갱신
 });
 addEventListener('pagehide', () => { flush(true); saveToday(); });
 
@@ -1168,7 +1207,6 @@ async function rankAdd(pts, keepalive) {
   const nick = PREF.mode === 'nick' ? PREF.nick : '', college = PREF.college;
   if (Rank.kind === 'supabase') {
     applyBoard(await sbRpc('inu_add', { p_device: DEVICE, p_points: pts, p_nick: nick || null, p_college: college }, keepalive));
-    schedPoll();   // 방금 순위표를 받았으니 다음 조회는 미룸
   } else if (Rank.kind === 'claude') {
     // players/{내 id} 문서 하나에 오늘 날짜와 누적 점수를 더함
     const ref = Rank.db.doc('players/' + Rank.uid), day = todayKST();
@@ -1192,12 +1230,12 @@ async function rankInit() {
       const r = await fetch('config.json', { cache: 'no-cache' });
       if (r.ok) {
         const c = await r.json();
-        if (c.supabaseUrl && c.supabaseKey) { Rank.kind = 'supabase'; Rank.sb = c; sbLoad().catch(() => {}).finally(() => schedPoll()); }
+        if (c.supabaseUrl && c.supabaseKey) { Rank.kind = 'supabase'; Rank.sb = c; }
       }
     } catch (e) { /* 랭킹 없이 */ }
   }
   renderBoard();
-  if (Rank.kind) schedSync();
+  if (Rank.kind) runTick();   // 처음 한 번: 지난번에 못 보낸 점수가 있으면 보내고 순위표를 받아 옴
 }
 function subscribeClaude() {
   if (Rank.unsub) Rank.unsub();
@@ -1224,17 +1262,58 @@ async function sbRpc(fn, body, keepalive) {
 }
 async function sbLoad() { applyBoard(await sbRpc('inu_board', { p_device: DEVICE })); }
 
-// 순위표 폴링: 화면이 보일 때만. 평소 20~30초, 전체 순위를 펼쳤을 때 8~12초
-function schedPoll(ms) {
-  clearTimeout(Rank.pollT);
-  if (Rank.kind !== 'supabase') return;
-  Rank.pollT = setTimeout(pollTick, ms != null ? ms : ($('#miniPanel').hidden ? jitter(25000, 5000) : jitter(10000, 2000)));
+/* 갱신 표시: 진행 바, '18초 후 갱신', 반영 대기 점수 */
+function fillBar(ms) {
+  const i = $('#miniProg');
+  i.style.transition = 'none'; i.style.width = '0%';
+  void i.offsetWidth;   // 처음부터 다시 차오르게
+  i.style.transition = `width ${ms}ms linear`; i.style.width = '100%';
 }
-function pollTick() {
-  if (document.hidden) return;   // 다시 보이면 visibilitychange에서 이어 감
-  sbLoad().catch(() => {}).finally(() => schedPoll());
+function setTickState(s) { Tick.state = s; Tick.since = Date.now(); renderTick(); }
+function renderTick() {
+  const el = $('#miniTick'), age = Date.now() - Tick.since;
+  let t = '', fail = false;
+  if (Tick.state === 'busy') t = '갱신 중';
+  else if (Tick.state === 'fail' && age < 3500) { t = '연결이 불안정해요, 다음에 다시 시도해요'; fail = true; }
+  else if (Tick.state === 'done' && age < 1500) t = '방금 갱신됨';
+  else if (Tick.at) t = `${Math.max(1, Math.ceil((Tick.at - Date.now()) / 1000))}초 후 갱신`;
+  if (el.textContent !== t) el.textContent = t;   // 바뀔 때만 건드려서 깜빡이지 않게
+  el.classList.toggle('fail', fail);
+  const w = $('#miniWait'), wt = Sync.on && Sync.pending > 0 ? `+${Sync.pending.toLocaleString()}점 반영 대기 중` : '';
+  if (w.textContent !== wt) w.textContent = wt;
 }
-function pollSoon() { schedPoll(Math.random() * 3000); }
+setInterval(renderTick, 250);
+// 보내는 순간: 대기 점수가 '우리 N위' 칩으로 날아 들어감
+function flyPoints(pts) {
+  const from = $('#miniWait'), to = $('#miniMine');
+  if (calm || document.hidden || $('#mini').hidden || !from.textContent) return;
+  const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+  const el = document.createElement('span');
+  el.className = 'fly'; el.textContent = `+${shortNum(pts)}`;
+  el.style.left = a.left + 'px'; el.style.top = a.top + 'px';
+  document.body.appendChild(el);
+  const dx = b.left + b.width / 2 - a.left - 20, dy = b.top + b.height / 2 - a.top - 6;
+  el.animate([
+    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+    { transform: `translate(${dx * 0.5}px, ${dy - 18}px) scale(1.15)`, opacity: 1, offset: 0.45 },
+    { transform: `translate(${dx}px, ${dy}px) scale(0.6)`, opacity: 0.2 },
+  ], { duration: 650, easing: 'ease-in' }).onfinish = () => {
+    el.remove();
+    to.classList.remove('bump'); void to.offsetWidth; to.classList.add('bump');
+  };
+}
+// 점수가 바뀐 단과대 숫자는 이전 값에서 올라가며 바뀜
+const shownTotal = {};
+function countUp(el, from, to) {
+  if (calm || from === to) { el.textContent = to.toLocaleString(); return; }
+  const t0 = performance.now(), dur = 600;
+  const step = t => {
+    const u = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - u, 3);
+    el.textContent = Math.round(from + (to - from) * e).toLocaleString();
+    if (u < 1 && el.isConnected) requestAnimationFrame(step);
+  };
+  el.textContent = from.toLocaleString(); requestAnimationFrame(step);
+}
 
 function applyBoard(b) {
   Rank.ok = true;
@@ -1295,7 +1374,8 @@ function renderBoard() {
     const a = document.createElement('span'); a.className = 'no'; a.textContent = k + 1;
     const b = document.createElement('span'); b.className = 'who'; b.textContent = CNAME[c.college] || c.college;
     const s = document.createElement('small'); s.textContent = `${c.people.toLocaleString()}명 참가`; b.appendChild(s);
-    const p = document.createElement('span'); p.className = 'pts'; p.textContent = c.total.toLocaleString();
+    const p = document.createElement('span'); p.className = 'pts';
+    countUp(p, shownTotal[c.college] != null ? shownTotal[c.college] : c.total, c.total); shownTotal[c.college] = c.total;
     const bar = document.createElement('span'); bar.className = 'bar'; bar.style.width = Math.round(c.total / max * 100) + '%';
     li.append(a, b, p, bar); list.appendChild(li);
   });
@@ -1304,7 +1384,8 @@ function setPanel(open) {
   $('#miniPanel').hidden = !open;
   $('#miniBar').setAttribute('aria-expanded', String(open));
   renderBoard();
-  if (open) pollSoon(); else schedPoll();
+  // 펼치면 남은 시간만 10초 이하로 줄임 (바로 조회하지 않아서 펼치기/접기를 연타해도 요청이 몰리지 않음)
+  if (open && Tick.at && Tick.at - Date.now() > 10000) schedTick();
 }
 $('#miniBar').addEventListener('click', () => setPanel($('#miniPanel').hidden));
 addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#miniPanel').hidden && !document.querySelector('dialog[open]')) setPanel(false); });
