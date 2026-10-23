@@ -588,7 +588,12 @@ function drawHud(force) {
     if (r > rankIdx) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
     rankIdx = r;
   }
-  if (score !== shownScore || force) { $('#score').textContent = $('#myToday').textContent = score.toLocaleString(); shownScore = score; }
+  if (score !== shownScore || force) {
+    const t = score.toLocaleString(), el = $('#score');
+    el.textContent = $('#myToday').textContent = t; shownScore = score;
+    // 수억~수십억 점이 돼도 폰 화면 밖으로 넘치지 않게 자릿수에 따라 글씨를 줄임 (기본 26px)
+    el.style.fontSize = t.length > 13 ? '16px' : t.length > 11 ? '19px' : t.length > 9 ? '22px' : '';
+  }
   $('#mult').textContent = '×' + mult().toFixed(1);
   if (W) $('#pct').textContent = `파괴율 ${Math.min(100, Math.round(W.released / W.N * 100))}%`;
 }
@@ -1164,7 +1169,7 @@ const DEVICE = (() => {
 const Rank = { kind: null, ok: false, colleges: [], mine: 0, mineCol: null, myRank: 0, rankCol: '', tab: 'col', people: null, openCol: '', colTop: {} };
 // 서버로 보낼 점수: 부술 때마다 pending에 쌓았다가 30초(±6초)마다 묶어서 보냄
 // 서버가 '흐른 시간 기준'으로 받을 만큼만 받고(accepted) 나머지는 다음 전송으로 넘김. 한 번에는 이만큼까지만 보냄
-const SEND_MAX = 1000000;   // schema.sql inu_add의 c_hard_max(200만)보다 작게
+const SEND_MAX = 1500000;   // schema.sql inu_add의 c_burst(150만)와 같게, c_hard_max(300만)보다 작게
 const Sync = { on: joined(), pending: 0, busy: false, day: todayKST() };
 
 // 오늘 점수는 새로고침해도 이어지게 저장 (보내는 중인 몫은 빼고 저장해서 두 번 더해지지 않게)

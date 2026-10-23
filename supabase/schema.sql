@@ -250,10 +250,11 @@ security definer
 set search_path = public
 as $$
 declare
-  c_hard_max    constant integer := 2000000;   -- 한 번 요청에 이보다 크면 이상한 요청으로 보고 거절
-  -- ※ 임시값: 시간 기준 상한. 통은 초당 c_rate씩 차고 최대 c_burst까지 쌓임. 넘는 몫은 받지 않고 accepted로 알려 줌
-  c_rate        constant double precision := 20000;
-  c_burst       constant double precision := 600000;
+  c_hard_max    constant integer := 3000000;   -- 한 번 요청에 이보다 크면 이상한 요청으로 보고 거절
+  -- 시간 기준 상한. 통은 초당 c_rate씩 차고 최대 c_burst(30초분)까지 쌓임. 넘는 몫은 받지 않고 accepted로 알려 줌
+  -- (2026-10-24 실제 기록: 활발한 플레이 평균 초당 약 2.5만 점 → 2배 여유로 5만)
+  c_rate        constant double precision := 50000;
+  c_burst       constant double precision := 1500000;
   c_dev_per_min constant integer := 6;
   c_ip_per_min  constant integer := 600;
   v_day date := (now() at time zone 'Asia/Seoul')::date;
