@@ -121,13 +121,28 @@ dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-vis
 .minibar .chev { flex: none; color: var(--muted); transition: transform .2s; }
 .minibar[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .minipanel { background: #262624; border-radius: 10px; padding: 10px 10px 10px; margin-bottom: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.3); }
-.minipanel .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 0 2px; }
-.minipanel .head b { font: 400 18px/1 var(--display); }
-.minipanel .head span { font-size: 11px; color: var(--muted); font-weight: 700; }
+.minipanel .head { display: flex; align-items: center; gap: 6px; }
+.minipanel .head button { appearance: none; border: 0; background: transparent; color: var(--muted); font: 400 16px/1 var(--display); padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+.minipanel .head button[aria-selected="true"] { background: rgba(244,245,242,.1); color: var(--paper); }
+.minipanel .head button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 1px; }
+.minipanel .head span { margin-left: auto; font-size: 10.5px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+.minipanel .foot2 { margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--hazard); text-align: center; }
+.minipanel .foot2 button { appearance: none; width: 100%; border: 1px dashed rgba(242,194,48,.6); background: transparent; color: var(--hazard); font: 800 12px/1.2 var(--text); padding: 8px; border-radius: 6px; cursor: pointer; }
 .minipanel .me { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; font-weight: 800; }
+.minipanel .me small { display: block; margin-top: 3px; font-size: 11px; font-weight: 700; color: var(--muted); }
+.board li.open { background: rgba(244,245,242,.1); }
+.board li[role="button"] { cursor: pointer; }
+.board li[role="button"]:focus-visible { outline: 2px solid var(--hazard); outline-offset: -2px; }
+.board li.sub { display: block; padding: 4px 8px 6px 34px; background: none; }
+.board li.sub ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.board li.sub li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 6px; font-size: 12px; font-weight: 700; background: none; border-radius: 4px; }
+.board li.sub li.mine { outline: 1px solid var(--hazard); }
+.board li.sub li b { font: 400 13px/1 var(--display); color: var(--muted); margin-right: 6px; }
+.board li.sub li span:last-child { font-variant-numeric: tabular-nums; color: var(--muted); }
+.board li.sub .empty { padding: 4px 0; font-size: 12px; }
 .minipanel .me b { font: 400 18px/1 var(--display); color: var(--hazard); font-variant-numeric: tabular-nums; }
 .minipanel .me button { appearance: none; border: 1px solid rgba(244,245,242,.3); background: transparent; color: var(--paper); font: 700 12px/1 var(--text); padding: 7px 10px; border-radius: 5px; cursor: pointer; flex: none; }
-.board { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 5px; max-height: min(42vh, 380px); overflow-y: auto; overscroll-behavior: contain; }
+.board { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 5px; max-height: min(38vh, 340px); overflow-y: auto; overscroll-behavior: contain; }
 .board li { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; font-size: 14px; padding: 7px 8px; border-radius: 6px; background: rgba(244,245,242,.05); position: relative; overflow: hidden; }
 .board li.mine { outline: 2px solid var(--hazard); outline-offset: -2px; }
 .board .no { font: 400 17px var(--display); color: var(--muted); text-align: center; }
@@ -173,6 +188,7 @@ dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-vis
       <label><input type="radio" name="join" value="nick"> 닉네임으로 참가</label>
       <label><input type="radio" name="join" value="no"> 참가 안 함 (혼자 즐기기)</label>
       <input type="text" id="nick" maxlength="10" placeholder="닉네임 (10자까지)" autocomplete="off" hidden>
+      <p class="note" id="nickNote" hidden>개인 랭킹과 단과대 기여 순위에 이 이름으로 올라가요.</p>
       <label class="sel" id="colWrap">소속 단과대<select id="college"></select></label>
       <p class="note">다른 사람에게는 닉네임(또는 익명)과 단과대만 보여요.</p>
     </fieldset>
@@ -183,9 +199,14 @@ dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-vis
 
 <div class="mini" id="mini" hidden>
   <div class="minipanel" id="miniPanel" hidden>
-    <div class="head"><b>오늘 단과대 대항</b><span>한국 시간 자정에 새로 시작</span></div>
+    <div class="head" role="tablist">
+      <button type="button" role="tab" data-tab="col" aria-selected="true">단과대 대항</button>
+      <button type="button" role="tab" data-tab="people" aria-selected="false">개인 랭킹</button>
+      <span>오늘 · 자정에 새로 시작</span>
+    </div>
     <ol class="board" id="boardList"></ol>
-    <div class="me"><span>오늘 내 점수 <b id="myToday">0</b></span><button id="boardMe" type="button">내 정보</button></div>
+    <div class="foot2" id="boardFoot" hidden></div>
+    <div class="me"><span>오늘 내 점수 <b id="myToday">0</b><small id="myContrib" hidden></small></span><button id="boardMe" type="button">내 정보</button></div>
   </div>
   <button type="button" class="minibar" id="miniBar" aria-expanded="false" aria-controls="miniPanel">
     <span class="r1"><span class="podium" id="podium"></span><span class="mine" id="miniMine"></span><span class="chev" aria-hidden="true">▲</span></span>
@@ -1114,6 +1135,17 @@ function savePref(p) { PREF = p; store.set(PREF_KEY, p); Sync.on = joined(); if 
 const joined = () => (PREF.mode === 'anon' || PREF.mode === 'nick') && !!CNAME[PREF.college];
 const todayKST = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const cleanNick = v => String(v || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 10);
+// 닉네임 욕설 검사: 띄어쓰기, 숫자, 특수문자를 빼고 비교. schema.sql의 inu_nick_bad와 같은 목록을 유지할 것
+const BAD_WORDS = [
+  '시발', '씨발', '씨바', '씨빨', '시빨', 'ㅅㅂ', 'ㅆㅂ', 'ㅅㅍ', '씹', '병신', '븅신', '빙신', 'ㅂㅅ', 'ㅄ',
+  '개새', '개색', '개섀', '새끼', 'ㅅㄲ', '좆', '존나', '졸라', 'ㅈㄴ', '지랄', 'ㅈㄹ', '염병', '엠창', '애미', '애비',
+  '느금', '니미', '섹스', '보지', '자지', '창녀', '걸레', '꺼져', '닥쳐', '등신', '미친', 'ㅁㅊ', '또라이', '틀딱',
+  '한남충', '김치녀', '된장녀', '일베', '메갈', '운지', '찐따',
+  'fuck', 'fuk', 'fck', 'shit', 'bitch', 'asshole', 'dick', 'cunt', 'nigger', 'nigga', 'faggot', 'pussy', 'porn',
+  'sex', 'slut', 'whore', 'bastard', 'retard', 'penis', 'vagina',
+];
+const nickBad = v => { const s = String(v || '').toLowerCase().replace(/[^a-z가-힣ㄱ-ㅎㅏ-ㅣ]/g, ''); return BAD_WORDS.some(w => s.includes(w)); };
+const colShort = c => (CNAME[c] || c).replace(/대학$/, '대');   // 정보기술대학 → 정보기술대
 const shortNum = n => n >= 1e8 ? (n / 1e8).toFixed(1) + '억' : n >= 1e4 ? (n / 1e4).toFixed(1) + '만' : n.toLocaleString();
 const jitter = (base, spread) => base + (Math.random() * 2 - 1) * spread;   // 모두의 요청이 한순간에 몰리지 않게
 
@@ -1129,9 +1161,10 @@ const DEVICE = (() => {
   return id;
 })();
 
-const Rank = { kind: null, ok: false, colleges: [], mine: 0, myRank: 0, rankCol: '' };
+const Rank = { kind: null, ok: false, colleges: [], mine: 0, mineCol: null, myRank: 0, rankCol: '', tab: 'col', people: null, openCol: '', colTop: {} };
 // 서버로 보낼 점수: 부술 때마다 pending에 쌓았다가 30초(±6초)마다 묶어서 보냄
-const SEND_MAX = 300000;   // ※ 임시 상한. schema.sql의 c_max_points와 같게 맞출 것
+// 서버가 '흐른 시간 기준'으로 받을 만큼만 받고(accepted) 나머지는 다음 전송으로 넘김. 한 번에는 이만큼까지만 보냄
+const SEND_MAX = 1000000;   // schema.sql inu_add의 c_hard_max(200만)보다 작게
 const Sync = { on: joined(), pending: 0, busy: false, day: todayKST() };
 
 // 오늘 점수는 새로고침해도 이어지게 저장 (보내는 중인 몫은 빼고 저장해서 두 번 더해지지 않게)
@@ -1147,7 +1180,8 @@ function saveToday() {
 setInterval(() => {
   const d = todayKST();
   if (d !== Sync.day) {   // 자정(한국 시간)이 지나면 새 날. 아직 안 보낸 몫은 새 날 점수로 보냄
-    Sync.day = d; score = 0; Rank.mine = 0; Rank.colleges = []; Rank.myRank = 0;
+    Sync.day = d; score = 0; Rank.mine = 0; Rank.mineCol = null; Rank.colleges = []; Rank.myRank = 0;
+    Rank.people = null; Rank.colTop = {}; Rank.openCol = '';
     if (Rank.kind === 'claude') subscribeClaude();
     renderBoard(); schedTick(jitter(5000, 5000));   // 모두 자정에 한꺼번에 몰리지 않게
   }
@@ -1205,8 +1239,12 @@ addEventListener('pagehide', () => { flush(true); saveToday(); });
 
 async function rankAdd(pts, keepalive) {
   const nick = PREF.mode === 'nick' ? PREF.nick : '', college = PREF.college;
+  Rank.sentAt = Date.now();   // 이 직후 순위가 오르면 '내 덕분'으로 알려 줌
   if (Rank.kind === 'supabase') {
-    applyBoard(await sbRpc('inu_add', { p_device: DEVICE, p_points: pts, p_nick: nick || null, p_college: college }, keepalive));
+    const b = await sbRpc('inu_add', { p_device: DEVICE, p_points: pts, p_nick: nick || null, p_college: college }, keepalive);
+    const acc = b.accepted != null ? Number(b.accepted) || 0 : pts;
+    if (acc < pts) Sync.pending += pts - acc;   // 시간 기준 상한을 넘은 몫은 버리지 않고 다음 전송에
+    applyBoard(b);
   } else if (Rank.kind === 'claude') {
     // players/{내 id} 문서 하나에 오늘 날짜와 누적 점수를 더함
     const ref = Rank.db.doc('players/' + Rank.uid), day = todayKST();
@@ -1240,15 +1278,19 @@ async function rankInit() {
 function subscribeClaude() {
   if (Rank.unsub) Rank.unsub();
   Rank.unsub = Rank.db.collection('players').where('day', '==', todayKST()).limit(1000).onSnapshot(snap => {
-    const by = {}; let mine = 0;
-    for (const d of snap.docs) {
-      const r = d.data(), pts = Number(r.points) || 0;
-      if (d.id === Rank.uid) mine = pts;
-      if (!CNAME[r.college] || pts <= 0) continue;
+    const by = {}, mineCol = {}; let mine = 0;
+    // 개인 랭킹과 기여 TOP 5도 이 문서들로 계산 (claude.ai 안에서는 숨김 관리 SQL 대신 욕설 검사만)
+    Rank.docs = snap.docs.map(d => {
+      const r = d.data();
+      return { mine: d.id === Rank.uid, points: Number(r.points) || 0, college: r.college, nick: !r.anon && r.nick && !nickBad(r.nick) ? r.nick : null };
+    }).filter(r => r.points > 0 && CNAME[r.college]);
+    for (const r of Rank.docs) {
+      if (r.mine) { mine = r.points; mineCol[r.college] = r.points; }
       const c = by[r.college] || (by[r.college] = { college: r.college, total: 0, people: 0 });
-      c.total += pts; c.people++;
+      c.total += r.points; c.people++;
     }
-    applyBoard({ colleges: Object.values(by).sort((a, b) => b.total - a.total), mine });
+    applyBoard({ colleges: Object.values(by).sort((a, b) => b.total - a.total), mine, mine_college: mineCol });
+    if (Rank.tab === 'people' && !$('#miniPanel').hidden) loadPeople();
   }, () => { Rank.ok = false; renderBoard(); });
 }
 async function sbRpc(fn, body, keepalive) {
@@ -1319,23 +1361,40 @@ function applyBoard(b) {
   Rank.ok = true;
   Rank.colleges = (b.colleges || []).map(c => ({ college: c.college, total: Number(c.total) || 0, people: Number(c.people) || 0 }));
   Rank.mine = Number(b.mine) || 0;
+  // 우리 단과대에 낸 내 오늘 점수 (옛 서버라 mine_college가 없으면 오늘 전체 합계로 어림)
+  const col = joined() ? PREF.college : '';
+  Rank.mineCol = b.mine_college ? Number(b.mine_college[col]) || 0 : Rank.mine;
   // 다른 탭에서 번 점수 등으로 서버 쪽이 더 크면 화면 숫자를 맞춰 줌
   score = Math.max(score, Rank.mine + Sync.pending);
-  // 우리 단과대 순위가 오르면 알려 줌 (처음 불러올 때와 단과대를 바꿨을 때는 빼고)
-  const col = joined() ? PREF.college : '', k = Rank.colleges.findIndex(c => c.college === col) + 1;
-  if (col && col === Rank.rankCol && k && Rank.myRank && k < Rank.myRank)
-    showToast(`${CNAME[col].replace(/대학$/, '대')} ${Rank.myRank}위 → ${k}위!`, '우리 단과대 순위가 올랐어요');
+  // 우리 단과대 순위가 오르면 알려 줌 (처음 불러올 때와 단과대를 바꿨을 때는 빼고).
+  // 내가 방금 보낸 점수 때문이면 닉네임 참가자에게는 이름을 넣어서
+  const k = Rank.colleges.findIndex(c => c.college === col) + 1;
+  if (col && col === Rank.rankCol && k && Rank.myRank && k < Rank.myRank) {
+    const byMe = Date.now() - (Rank.sentAt || 0) < 4000 && PREF.mode === 'nick' && PREF.nick;
+    if (byMe) showToast(`${PREF.nick}님 덕분에 ${colShort(col)} ${Rank.myRank}위 → ${k}위!`, '내 점수로 우리 단과대 순위가 올랐어요');
+    else showToast(`${colShort(col)} ${Rank.myRank}위 → ${k}위!`, '우리 단과대 순위가 올랐어요');
+  }
   Rank.rankCol = col; Rank.myRank = k;
   renderBoard();
 }
 
+// 내 기여도: 우리 단과대 오늘 합계 중 내 몫 (나한테만 보임)
+function contrib() {
+  const col = joined() ? PREF.college : '', c = Rank.colleges.find(x => x.college === col);
+  if (!col || !c || !c.total || !Rank.mineCol) return null;
+  const p = Math.min(100, Rank.mineCol / c.total * 100);
+  return { col, pts: Rank.mineCol, pct: p >= 10 ? p.toFixed(0) + '%' : p >= 0.1 ? p.toFixed(1) + '%' : '0.1% 미만' };
+}
 function renderMyCol() {
   const el = $('#mycol'), mine = joined() ? PREF.college : '';
-  if (!Rank.kind || !mine) { el.hidden = true; return; }
-  const k = Rank.colleges.findIndex(c => c.college === mine);
-  const short = CNAME[mine].replace(/대학$/, '대');
-  el.textContent = k < 0 ? `${short} 아직 기록 없음` : `${short} ${k + 1}위`;
+  if (!Rank.kind || !mine) { el.hidden = true; $('#myContrib').hidden = true; return; }
+  const k = Rank.colleges.findIndex(c => c.college === mine), ct = contrib();
+  // 점수판이 넓어지지 않게 짧은 이름으로 (자세한 기여도는 펼친 랭킹 아래)
+  el.textContent = k < 0 ? `${CSHORT[mine]} 아직 기록 없음` : `${CSHORT[mine]} ${k + 1}위` + (ct ? ` · ${ct.pct}` : '');
   el.hidden = false;
+  const mc = $('#myContrib');
+  mc.hidden = !ct;
+  if (ct) mc.textContent = `${colShort(ct.col)}에 오늘 ${ct.pts.toLocaleString()}점 기여 (${ct.pct})`;
 }
 function renderMini() {
   const box = $('#mini');
@@ -1360,30 +1419,126 @@ function renderMini() {
   }
   $('#boardMe').textContent = col ? '내 정보' : '참가하기';
 }
+function boardRow(list, no, who, small, pts, mine) {
+  const li = document.createElement('li'); if (mine) li.className = 'mine';
+  const a = document.createElement('span'); a.className = 'no'; a.textContent = no;
+  const b = document.createElement('span'); b.className = 'who'; b.textContent = who;
+  if (small) { const s = document.createElement('small'); s.textContent = small; b.appendChild(s); }
+  const p = document.createElement('span'); p.className = 'pts'; p.textContent = pts.toLocaleString();
+  li.append(a, b, p); list.appendChild(li);
+  return { li, p };
+}
 function renderBoard() {
   renderMyCol(); renderMini();
-  const list = $('#boardList');
+  const list = $('#boardList'), foot = $('#boardFoot');
   if ($('#miniPanel').hidden) return;   // 접혀 있으면 목록은 안 그림
-  list.textContent = '';
+  list.textContent = ''; foot.textContent = ''; foot.hidden = true;
   const empty = t => { const li = document.createElement('li'); li.className = 'empty'; li.textContent = t; list.appendChild(li); };
   if (!Rank.ok) return empty('랭킹 서버에 연결하는 중이에요. 부수는 건 그대로 할 수 있어요.');
+  if (Rank.tab === 'people') return renderPeople(list, foot, empty);
   if (!Rank.colleges.length) return empty('아직 오늘 기록이 없어요. 우리 단과대 첫 점수를 올려 보세요.');
   const myCol = joined() ? PREF.college : '', max = Rank.colleges[0].total || 1;
   Rank.colleges.forEach((c, k) => {
-    const li = document.createElement('li'); if (c.college === myCol) li.className = 'mine';
-    const a = document.createElement('span'); a.className = 'no'; a.textContent = k + 1;
-    const b = document.createElement('span'); b.className = 'who'; b.textContent = CNAME[c.college] || c.college;
-    const s = document.createElement('small'); s.textContent = `${c.people.toLocaleString()}명 참가`; b.appendChild(s);
-    const p = document.createElement('span'); p.className = 'pts';
+    const { li, p } = boardRow(list, k + 1, CNAME[c.college] || c.college, `${c.people.toLocaleString()}명 참가 · 눌러서 기여 TOP 5`, c.total, c.college === myCol);
     countUp(p, shownTotal[c.college] != null ? shownTotal[c.college] : c.total, c.total); shownTotal[c.college] = c.total;
     const bar = document.createElement('span'); bar.className = 'bar'; bar.style.width = Math.round(c.total / max * 100) + '%';
-    li.append(a, b, p, bar); list.appendChild(li);
+    li.appendChild(bar);
+    // 단과대를 누르면 그 단과대의 오늘 기여 TOP 5가 아래에 펼쳐짐 (펼칠 때만 불러옴)
+    const open = Rank.openCol === c.college;
+    li.setAttribute('role', 'button'); li.tabIndex = 0; li.setAttribute('aria-expanded', String(open));
+    if (open) li.classList.add('open');
+    li.onclick = () => toggleColTop(c.college);
+    li.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleColTop(c.college); } };
+    if (open) list.appendChild(colTopRow(c.college));
   });
 }
+function colTopRow(col) {
+  const li = document.createElement('li'); li.className = 'sub';
+  const rows = Rank.colTop[col];
+  if (!rows) { li.innerHTML = '<span class="empty">불러오는 중</span>'; return li; }
+  if (rows === 'fail') { li.innerHTML = '<span class="empty">불러오지 못했어요. 다시 눌러 주세요.</span>'; return li; }
+  if (!rows.length) { li.innerHTML = '<span class="empty">아직 기록이 없어요</span>'; return li; }
+  const ol = document.createElement('ol');
+  rows.forEach((r, k) => {
+    const x = document.createElement('li'); if (r.mine) x.className = 'mine';
+    const a = document.createElement('span'), n = document.createElement('b');
+    n.textContent = k + 1; a.append(n, (r.nick || '익명') + (r.mine ? ' (나)' : ''));
+    const b = document.createElement('span'); b.textContent = Number(r.points).toLocaleString();
+    x.append(a, b); ol.appendChild(x);
+  });
+  li.appendChild(ol);
+  return li;
+}
+async function toggleColTop(col) {
+  if (Rank.openCol === col) { Rank.openCol = ''; renderBoard(); return; }
+  Rank.openCol = col; Rank.colTop[col] = null; renderBoard();
+  try {
+    let rows;
+    if (Rank.kind === 'supabase') rows = await sbRpc('inu_college_top', { p_college: col, p_device: DEVICE });
+    else rows = (Rank.docs || []).filter(r => r.college === col).sort((a, b) => b.points - a.points).slice(0, 5);
+    Rank.colTop[col] = rows || [];
+  } catch (e) { Rank.colTop[col] = 'fail'; }
+  if (Rank.openCol === col) renderBoard();
+}
+
+/* 개인 랭킹: 닉네임 참가자의 오늘 누적 TOP 20. 탭을 연 동안만 10초마다 불러옴 (미니 랭킹 갱신과 따로) */
+function renderPeople(list, foot, empty) {
+  const P = Rank.people;
+  if (!P) return empty('불러오는 중');
+  if (P === 'fail') empty('불러오지 못했어요. 잠시 뒤에 다시 시도해요.');
+  else if (!P.top.length) empty('아직 닉네임으로 올라온 기록이 없어요.');
+  else P.top.forEach(t => boardRow(list, t.rank, t.nick, colShort(t.college), Number(t.points), t.mine));
+  foot.hidden = false;
+  if (PREF.mode === 'nick' && joined()) {
+    const me = P !== 'fail' && P.me;
+    if (me && me.rank > 20) foot.textContent = `내 순위 ${me.rank}위, ${Number(me.points).toLocaleString()}점`;
+    else if (!me) foot.textContent = '점수를 보내면 개인 랭킹에 올라가요';
+    else foot.hidden = true;   // TOP 20 안이면 목록에서 내 줄이 강조됨
+  } else {
+    const b = document.createElement('button'); b.type = 'button';
+    b.textContent = '닉네임으로 참가하면 개인 랭킹에 올라가요';
+    b.onclick = () => openProfile();
+    foot.appendChild(b);
+  }
+}
+async function loadPeople() {
+  try {
+    if (Rank.kind === 'supabase') Rank.people = await sbRpc('inu_people', { p_device: DEVICE });
+    else {
+      // claude.ai 안에서는 구독 중인 오늘 문서로 계산
+      const vis = (Rank.docs || []).filter(r => r.nick).sort((a, b) => b.points - a.points);
+      let rk = 0;
+      const ranked = vis.map((r, i) => ({ ...r, rank: i && r.points === vis[i - 1].points ? rk : (rk = i + 1) }));
+      const me = ranked.find(r => r.mine);
+      Rank.people = { top: ranked.slice(0, 20), me: me ? { rank: me.rank, points: me.points } : null };
+    }
+  } catch (e) { if (!Rank.people) Rank.people = 'fail'; }
+  if (Rank.tab === 'people') renderBoard();
+}
+function peopleTimer() {
+  clearTimeout(Rank.peopleT);
+  const gen = Rank.peopleGen = (Rank.peopleGen || 0) + 1;   // 새로 부르면 이전 반복은 멈춤 (반복이 겹치지 않게)
+  const on = () => gen === Rank.peopleGen && Rank.tab === 'people' && !$('#miniPanel').hidden && !document.hidden && Rank.kind;
+  if (!on()) return;
+  // 탭이나 패널을 연타해도 5초 안에는 다시 부르지 않음 (수동 새로고침처럼 요청이 몰리지 않게)
+  const since = Date.now() - (Rank.peopleAt || 0);
+  if (since < 5000) { Rank.peopleT = setTimeout(peopleTimer, 5000 - since); return; }
+  Rank.peopleAt = Date.now();
+  loadPeople().finally(() => {
+    if (on() && Rank.kind === 'supabase') Rank.peopleT = setTimeout(peopleTimer, jitter(10000, 1000));
+  });
+}
+document.querySelectorAll('#miniPanel .head button').forEach(b => b.addEventListener('click', () => {
+  Rank.tab = b.dataset.tab;
+  document.querySelectorAll('#miniPanel .head button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  renderBoard(); peopleTimer();
+}));
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(Rank.peopleT); else peopleTimer(); });
+
 function setPanel(open) {
   $('#miniPanel').hidden = !open;
   $('#miniBar').setAttribute('aria-expanded', String(open));
-  renderBoard();
+  renderBoard(); peopleTimer();
   // 펼치면 남은 시간만 10초 이하로 줄임 (바로 조회하지 않아서 펼치기/접기를 연타해도 요청이 몰리지 않음)
   if (open && Tick.at && Tick.at - Date.now() > 10000) schedTick();
 }
@@ -1396,7 +1551,7 @@ $('.util .hint').textContent = isTouch ? '끌어서 돌리기, 두 손가락으�
 function joinMode() { const r = document.querySelector('input[name=join]:checked'); return r ? r.value : 'anon'; }
 function syncJoin() {
   const m = joinMode();
-  $('#nick').hidden = m !== 'nick';
+  $('#nick').hidden = $('#nickNote').hidden = m !== 'nick';
   $('#colWrap').hidden = m === 'no';
 }
 document.querySelectorAll('input[name=join]').forEach(r => r.addEventListener('change', syncJoin));
@@ -1410,14 +1565,29 @@ function openProfile() {
 $('#pSave').addEventListener('click', () => {
   const m = joinMode(), nick = cleanNick($('#nick').value), college = $('#college').value;
   if (m === 'nick' && !nick) { $('#pMsg').textContent = '닉네임을 적어 주세요.'; $('#nick').focus(); return; }
+  if (m === 'nick' && nickBad(nick)) { $('#pMsg').textContent = '다른 닉네임을 써 주세요.'; $('#nick').focus(); return; }
   if (m !== 'no' && !CNAME[college]) { $('#pMsg').textContent = '소속 단과대를 골라 주세요.'; $('#college').focus(); return; }
+  const oldNick = PREF.mode === 'nick' ? PREF.nick : '';
   savePref({ mode: m, nick: m === 'nick' ? nick : '', college: m === 'no' ? '' : college });
   $('#profile').close();
   // 단과대를 바꿨으면 순위 상승 알림 기준도 새로 잡음
   Rank.rankCol = joined() ? PREF.college : '';
   Rank.myRank = Rank.colleges.findIndex(c => c.college === Rank.rankCol) + 1;
+  Rank.mineCol = null;
   renderBoard();
+  // 닉네임을 바꾸거나 익명/참가 안 함으로 바꾸면 오늘 이미 올린 점수에도 바로 반영 (개인 랭킹에 새 이름, 또는 빠짐)
+  const newNick = m === 'nick' ? nick : '';
+  if (newNick !== oldNick) setNick(newNick).then(() => { if (Rank.tab === 'people') peopleTimer(); });
 });
+async function setNick(nick) {
+  try {
+    if (Rank.kind === 'supabase') await sbRpc('inu_set_nick', { p_device: DEVICE, p_nick: nick || null });
+    else if (Rank.kind === 'claude') {
+      const ref = Rank.db.doc('players/' + Rank.uid), snap = await ref.get();
+      if (snap.exists && snap.data().day === todayKST()) await ref.set({ ...snap.data(), nick, anon: !nick });
+    }
+  } catch (e) { /* 다음 점수 전송 때 새 닉네임으로 다시 맞춰짐 */ }
+}
 $('#pLater').addEventListener('click', () => {
   if (!PREF.mode) savePref({ ...PREF, asked: true });
   $('#profile').close();
