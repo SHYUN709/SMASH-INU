@@ -73,11 +73,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #cdd8dc; col
 @media (max-width: 640px) { .foot { display: none; } }
 .util .go { background: var(--hazard); color: var(--ink); border-color: transparent; }
 .util .spacer { flex: 1; }
-.timer { font: 400 18px/1 var(--display); color: var(--hazard); margin-top: 6px; font-variant-numeric: tabular-nums; }
-.timer.low { color: var(--alarm); }
+.score .today { font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 3px; }
 .mycol[hidden] { display: none; }
 .mycol { cursor: pointer; border: 0; font-family: var(--text); margin-top: 5px; font-size: 12px; font-weight: 800; color: var(--ink); background: var(--hazard); border-radius: 4px; padding: 3px 6px; display: inline-block; }
-.hintpill { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 136px); background: var(--panel); font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 99px; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
+.hintpill { position: fixed; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 132px); background: var(--panel); font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 99px; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
 .hintpill.on { opacity: 1; }
 dialog { border: 0; padding: 0; background: #262624; color: var(--paper); border-radius: 12px; width: min(420px, calc(100% - 24px)); max-height: calc(100% - 40px); font-family: var(--text); }
 dialog::backdrop { background: rgba(20, 20, 18, .55); }
@@ -99,10 +98,26 @@ dialog::before { content: ""; display: block; height: 7px; background: repeating
 .actions .go { background: var(--hazard); color: var(--ink); border-color: transparent; }
 .actions button:disabled { opacity: .5; cursor: default; }
 dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
-.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-.tabs button { appearance: none; border: 1px solid rgba(244,245,242,.25); background: transparent; color: var(--paper); font: 800 14px var(--text); padding: 9px; border-radius: 7px; cursor: pointer; }
-.tabs button[aria-pressed="true"] { background: var(--paper); color: var(--ink); border-color: transparent; }
-.board { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; max-height: 52vh; overflow-y: auto; }
+/* 미니 랭킹: 도구판 바로 위 한 줄, 누르면 위로 전체 순위가 펼쳐짐 (게임은 계속 할 수 있음) */
+.mini { position: fixed; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 20px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 12px + var(--dock-h, 112px) + 6px); }
+.minibar { appearance: none; width: 100%; display: flex; align-items: center; gap: 8px; border: 0; background: var(--panel); color: var(--paper); font: 800 12px/1 var(--text); padding: 8px 10px; border-radius: 8px; cursor: pointer; text-align: left; }
+.minibar:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
+.minibar .podium { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.minibar .podium b { font: 400 13px/1 var(--display); color: var(--hazard); margin-right: 3px; }
+.minibar .podium b.s2 { color: #d7dad2; } .minibar .podium b.s3 { color: #e0a173; }
+.minibar .podium span + span { margin-left: 8px; }
+.minibar .mine { flex: none; color: var(--ink); background: var(--hazard); border-radius: 4px; padding: 4px 6px; font-variant-numeric: tabular-nums; }
+.minibar .mine.off { background: rgba(244,245,242,.15); color: var(--paper); }
+.minibar .chev { flex: none; color: var(--muted); transition: transform .2s; }
+.minibar[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.minipanel { background: #262624; border-radius: 10px; padding: 10px 10px 10px; margin-bottom: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.3); }
+.minipanel .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 0 2px; }
+.minipanel .head b { font: 400 18px/1 var(--display); }
+.minipanel .head span { font-size: 11px; color: var(--muted); font-weight: 700; }
+.minipanel .me { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; font-weight: 800; }
+.minipanel .me b { font: 400 18px/1 var(--display); color: var(--hazard); font-variant-numeric: tabular-nums; }
+.minipanel .me button { appearance: none; border: 1px solid rgba(244,245,242,.3); background: transparent; color: var(--paper); font: 700 12px/1 var(--text); padding: 7px 10px; border-radius: 5px; cursor: pointer; flex: none; }
+.board { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 5px; max-height: min(42vh, 380px); overflow-y: auto; overscroll-behavior: contain; }
 .board li { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; font-size: 14px; padding: 7px 8px; border-radius: 6px; background: rgba(244,245,242,.05); position: relative; overflow: hidden; }
 .board li.mine { outline: 2px solid var(--hazard); outline-offset: -2px; }
 .board .no { font: 400 17px var(--display); color: var(--muted); text-align: center; }
@@ -127,10 +142,10 @@ dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-vis
     <div class="demo" id="demo" hidden>연습용 가짜 캠퍼스예요. <b>data/campus.json</b>을 넣으면 진짜 인천대 캠퍼스로 바뀝니다.</div>
   </div>
   <div class="score" aria-live="polite">
+    <div class="today">오늘 내 점수</div>
     <div class="num" id="score">0</div>
     <div class="row"><span class="mult" id="mult">×1.0</span><span class="rank" id="rank">D</span></div>
     <div class="pct" id="pct">파괴율 0%</div>
-    <div class="timer" id="timer" hidden>1:00</div>
     <button type="button" class="mycol" id="mycol" hidden aria-label="내 랭킹 정보 바꾸기"></button>
   </div>
 </div>
@@ -141,7 +156,7 @@ dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-vis
 <dialog id="profile">
   <div class="sheet">
     <h2>랭킹 참가 설정</h2>
-    <p class="sub">60초 도전 기록이 단과대 대항과 개인 순위에 올라가요. 한 번만 정하면 돼요.</p>
+    <p class="sub">부수는 점수가 30초마다 우리 단과대 점수에 더해져요. 한 번만 정하면 돼요.</p>
     <fieldset class="join">
       <legend>어떻게 참가할까요?</legend>
       <label><input type="radio" name="join" value="anon"> 익명으로 참가</label>
@@ -156,34 +171,21 @@ dialog button:focus-visible, dialog input:focus-visible, dialog select:focus-vis
   </div>
 </dialog>
 
-<dialog id="result">
-  <div class="sheet">
-    <h2>60초 끝!</h2>
-    <div class="big" id="rScore">0</div>
-    <p class="sub" id="rSub"></p>
-    <p class="msg" id="rMsg" aria-live="polite"></p>
-    <div class="actions"><button id="again" type="button">한 판 더</button><button id="submit" class="go" type="button">랭킹 보기</button></div>
-  </div>
-</dialog>
-
-<dialog id="board">
-  <div class="sheet">
-    <div class="tabs" role="tablist">
-      <button type="button" data-tab="college" aria-pressed="true">단과대 대항</button>
-      <button type="button" data-tab="solo" aria-pressed="false">개인 TOP 10</button>
-    </div>
-    <p class="note" id="boardNote">오늘 60초 도전 기록이에요. 매일 자정에 새로 시작해요.</p>
+<div class="mini" id="mini" hidden>
+  <div class="minipanel" id="miniPanel" hidden>
+    <div class="head"><b>오늘 단과대 대항</b><span>한국 시간 자정에 새로 시작</span></div>
     <ol class="board" id="boardList"></ol>
-    <div class="actions"><button id="boardClose" type="button">닫기</button><button id="boardMe" type="button">내 정보</button><button id="boardPlay" class="go" type="button">60초 도전</button></div>
+    <div class="me"><span>오늘 내 점수 <b id="myToday">0</b></span><button id="boardMe" type="button">내 정보</button></div>
   </div>
-</dialog>
+  <button type="button" class="minibar" id="miniBar" aria-expanded="false" aria-controls="miniPanel">
+    <span class="podium" id="podium"></span><span class="mine" id="miniMine"></span><span class="chev" aria-hidden="true">▲</span>
+  </button>
+</div>
 
-<div class="dock">
+<div class="dock" id="dock">
   <div class="tools" id="tools" role="toolbar" aria-label="부수는 도구"></div>
   <div class="util">
-    <button id="challenge" class="go" type="button">60초 도전</button>
-    <button id="boardBtn" type="button">랭킹</button>
-    <span class="spacer"></span>
+    <span class="hint">끌어서 돌리기, 두 손가락으로 확대</span>
     <button id="sound" type="button" aria-label="소리 끄기">소리</button>
     <button id="reset" type="button">다시 짓기</button>
   </div>
@@ -485,7 +487,7 @@ function resetBlocks() {
   w.alive = w.total.slice(); w.down = w.total.map(() => false);
   w.dyn.length = 0; w.queue.length = 0; w.released = 0; w.hmap.fill(0); w.gen = (w.gen || 0) + 1; w.rebuildAt = w.total.map(() => 0);
   craters.forEach(c => c.visible = false);
-  score = 0; meter = 0; rankIdx = 0; history.length = 0; drawHud(true);
+  drawHud(true);   // 다시 지어도 점수는 그대로 (오늘 누적)
 }
 
 /* ---------- 잔해 높이 ---------- */
@@ -524,11 +526,10 @@ function collapse(b) {
   const w = W; w.down[b] = true;
   for (let i = w.bS[b]; i < w.bE[b]; i++)
     if (w.st[i] === 0 && !w.sched[i]) { w.sched[i] = 1; w.queue.push({ i, t: now + 0.15 + w.lvl[i] * 0.045 + Math.random() * 0.35 }); }
-  const frozen = CH.phase === 'done' || CH.phase === 'count';
-  const bonus = frozen ? 0 : Math.round(w.total[b] * 20 * mult());
-  score += bonus; if (!frozen) meter += 300;
+  const bonus = Math.round(w.total[b] * 20 * mult());
+  earn(bonus); meter += 300;
   const name = w.B[b].name || '건물';
-  if (!frozen) showToast(`${name} 붕괴!`, `+${bonus.toLocaleString()}`);
+  showToast(`${name} 붕괴!`, `+${bonus.toLocaleString()}`);
   dustAt(new T.Vector3(w.X[w.bS[b]], 4, w.Z[w.bS[b]]), 10, w.cell * 4);
   boom(0.6);
 }
@@ -543,7 +544,9 @@ function variety() {
   return kinds === 1 ? 0.6 : kinds >= 3 ? 1.3 : 1;
 }
 const mult = () => (1 + rankIdx * 0.25) * variety();
-function addScore(base) { if (CH.phase === 'done' || CH.phase === 'count') return; score += Math.round(base * mult()); meter += base; lastHit = now; }
+function addScore(base) { earn(Math.round(base * mult())); meter += base; lastHit = now; }
+// 점수는 화면의 '오늘 내 점수'에 더하고, 랭킹에 참가 중이면 다음 전송 몫(Sync.pending)에도 더함
+function earn(pts) { if (pts <= 0) return; score += pts; if (Sync.on) Sync.pending += pts; }
 let hudT = 0, shownScore = -1;
 function drawHud(force) {
   const r = RANKS.reduce((a, x, k) => meter >= x[1] ? k : a, 0);
@@ -552,7 +555,7 @@ function drawHud(force) {
     if (r > rankIdx) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
     rankIdx = r;
   }
-  if (score !== shownScore || force) { $('#score').textContent = score.toLocaleString(); shownScore = score; }
+  if (score !== shownScore || force) { $('#score').textContent = $('#myToday').textContent = score.toLocaleString(); shownScore = score; }
   $('#mult').textContent = '×' + mult().toFixed(1);
   if (W) $('#pct').textContent = `파괴율 ${Math.min(100, Math.round(W.released / W.N * 100))}%`;
 }
@@ -634,9 +637,9 @@ function zap(dur) {
   o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
 }
 $('#sound').addEventListener('click', () => { muted = !muted; $('#sound').textContent = muted ? '소리 꺼짐' : '소리'; $('#sound').setAttribute('aria-label', muted ? '소리 켜기' : '소리 끄기'); });
-$('#reset').addEventListener('click', () => { if (W && CH.phase !== 'count') { if (CH.phase === 'play') stopChallenge(); rewind(); } });
+$('#reset').addEventListener('click', () => { if (W) rewind(); });
 
-/* ---------- 건물 하나 재건축 (60초 도전 중 파괴율이 막히지 않게) ---------- */
+/* ---------- 건물 하나 재건축 (부술 거리가 떨어지지 않게 항상 켜 둠) ---------- */
 function rebuildBuilding(b) {
   const w = W, gen = w.gen, list = [];
   for (let i = w.bS[b]; i < w.bE[b]; i++) if (w.st[i] !== 0) list.push(i);
@@ -731,7 +734,7 @@ function rewind(done) {
     w.inst.instanceMatrix.needsUpdate = true;
     if (t > 0.95 + FLY) {
       rewinding = false; resetBlocks(); shake(0.3);
-      showToast('다시 지었어요', '처음부터 부숴 보세요');
+      showToast('다시 지었어요', '점수는 그대로예요');
       if (done) done();
       return false;
     }
@@ -884,7 +887,7 @@ function pick(x, y) {
 }
 function groundAt(x, y) { toNdc(x, y); ray.setFromCamera(ndc, camera); const g = new T.Vector3(); return ray.ray.intersectPlane(gPlane, g) ? g : null; }
 function act(x, y) {
-  if (!W || rewinding || CH.phase === 'count' || CH.phase === 'done') return;
+  if (!W || rewinding) return;
   ensureAudio();
   const p = pick(x, y); if (!p) return;
   used(tool);
@@ -960,7 +963,7 @@ function endPointer(e) {
   if (e.type === 'pointerup' && !drag.moved && quick && drag.mode !== 'pan') act(e.clientX, e.clientY);
   else if (drag.mode === 'laser' && drag.moved && W) {
     const world = drag.path.map(([x, y]) => groundAt(x, y)).filter(Boolean);
-    if (world.length >= 2 && !rewinding && CH.phase !== 'count' && CH.phase !== 'done') { used('laser'); useLaser(world); }
+    if (world.length >= 2 && !rewinding) { used('laser'); useLaser(world); }
   }
   line.setAttribute('points', '');
   drag = null;
@@ -1056,7 +1059,7 @@ function frame(t) {
   flashLight.intensity *= Math.pow(0.02, dt);
   // 랭크 게이지는 손을 놓으면 서서히 내려감
   if (now - lastHit > 1.2) meter = Math.max(0, meter - dt * (60 + meter * 0.22));
-  hudT += dt; if (hudT > 0.1) { hudT = 0; drawHud(); tickChallenge(); }
+  hudT += dt; if (hudT > 0.1) { hudT = 0; drawHud(); if (!rewinding) checkRebuilds(); }
   // 카메라
   if (cam.goal) {
     const k = 1 - Math.pow(0.003, dt);
@@ -1075,176 +1078,239 @@ function frame(t) {
 }
 requestAnimationFrame(frame);
 
-/* ---------- 60초 도전 ---------- */
-const CH = { phase: 'free', endAt: 0, best: 0 };
-const timerEl = $('#timer');
-function startChallenge() {
-  if (!W || CH.phase === 'count') return;
-  ensureAudio();
-  const pref = loadPref();
-  if (Rank.kind && !pref.mode && !CH.askedOnce) { CH.askedOnce = true; openProfile(startChallenge); return; }
-  if (rewinding) return;
-  [$('#result'), $('#board')].forEach(d => d.open && d.close());
-  CH.phase = 'count'; CH.best = 0;
-  rewind(() => countdown());
-}
-function countdown() {
-  resetBlocks();
-  timerEl.hidden = false; timerEl.textContent = '1:00'; timerEl.classList.remove('low');
-  let n = 3;
-  const tick = () => {
-    if (n > 0) { showToast(String(n), '준비'); boom(0.15); n--; setTimeout(tick, 800); return; }
-    showToast('부숴!', '60초'); boom(0.5);
-    CH.phase = 'play'; CH.endAt = performance.now() + 60000;
-  };
-  tick();
-}
-function tickChallenge() {
-  if (CH.phase !== 'play') return;
-  checkRebuilds();
-  CH.best = Math.max(CH.best, rankIdx);
-  const left = Math.max(0, CH.endAt - performance.now()), sec = Math.ceil(left / 1000);
-  timerEl.textContent = `0:${String(sec).padStart(2, '0')}`;
-  timerEl.classList.toggle('low', sec <= 10);
-  if (left <= 0) endChallenge();
-}
-function stopChallenge() { CH.phase = 'free'; timerEl.hidden = true; }
-function endChallenge() {
-  CH.phase = 'done';
-  CH.score = score; CH.pct = Math.min(100, Math.round(W.released / W.N * 100));
-  showToast('그만!', `${CH.score.toLocaleString()}점`); boom(0.8);
-  setTimeout(openResult, 900);
-}
-
-/* ---------- 랭킹 ---------- */
+/* ---------- 랭킹: 단과대 대항 (오늘 누적) ---------- */
+// [코드, 이름, 짧은 이름] — 코드 목록은 supabase/schema.sql과 항상 같아야 함
 const COLLEGES = [
-  ['HUM', '인문대학'], ['NAT', '자연과학대학'], ['SOC', '사회과학대학'], ['GPE', '글로벌정경대학'],
-  ['ENG', '공과대학'], ['IT', '정보기술대학'], ['BIZ', '경영대학'], ['ART', '예술체육대학'],
-  ['EDU', '사범대학'], ['URB', '도시과학대학'], ['BIO', '생명과학기술대학'], ['NAS', '동북아국제통상물류학부'],
-  ['ETC', '그 밖의 학부'],
+  ['HUM', '인문대학', '인문대'], ['NAT', '자연과학대학', '자연대'], ['SOC', '사회과학대학', '사회대'], ['GPE', '글로벌정경대학', '글정대'],
+  ['ENG', '공과대학', '공대'], ['IT', '정보기술대학', '정보대'], ['BIZ', '경영대학', '경영대'], ['ART', '예술체육대학', '예체대'],
+  ['EDU', '사범대학', '사범대'], ['URB', '도시과학대학', '도시대'], ['BIO', '생명과학기술대학', '생명대'], ['NAS', '동북아국제통상물류학부', '동북아'],
+  ['ETC', '그 밖의 학부', '기타'],
 ];
-const CNAME = Object.fromEntries(COLLEGES);
+const CNAME = Object.fromEntries(COLLEGES.map(c => [c[0], c[1]]));
+const CSHORT = Object.fromEntries(COLLEGES.map(c => [c[0], c[2]]));
 const sel = $('#college');
 sel.innerHTML = '<option value="" disabled>단과대를 골라 주세요</option>' + COLLEGES.map(([c, n]) => `<option value="${c}">${n}</option>`).join('');
-const PREF_KEY = 'smash-inu-join';
-function loadPref() { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { return {}; } }
-function savePref(p) { try { localStorage.setItem(PREF_KEY, JSON.stringify(p)); } catch (e) { /* 저장 못 해도 괜찮음 */ } }
+
+const PREF_KEY = 'smash-inu-join', DAY_KEY = 'smash-inu-today', DEV_KEY = 'smash-inu-device';
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 저장 못 해도 괜찮음 */ } },
+};
+let PREF = store.get(PREF_KEY) || {};
+function loadPref() { return PREF; }
+function savePref(p) { PREF = p; store.set(PREF_KEY, p); Sync.on = joined(); if (!Sync.on) Sync.pending = 0; }
+const joined = () => (PREF.mode === 'anon' || PREF.mode === 'nick') && !!CNAME[PREF.college];
 const todayKST = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const cleanNick = v => String(v || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 10);
+const shortNum = n => n >= 1e8 ? (n / 1e8).toFixed(1) + '억' : n >= 1e4 ? (n / 1e4).toFixed(1) + '만' : n.toLocaleString();
+const jitter = (base, spread) => base + (Math.random() * 2 - 1) * spread;   // 모두의 요청이 한순간에 몰리지 않게
 
-const Rank = { kind: null, top: [], colleges: [], players: 0 };
+// 기기 id: 처음 한 번 만들어 저장. 폰에서 PC IP로 열면(http) crypto.randomUUID가 없어서 직접 만듦
+const DEVICE = (() => {
+  const old = store.get(DEV_KEY);
+  if (typeof old === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(old)) return old;
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = b[6] & 0x0f | 0x40; b[8] = b[8] & 0x3f | 0x80;
+  const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+  const id = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+  store.set(DEV_KEY, id);
+  return id;
+})();
+
+const Rank = { kind: null, ok: false, colleges: [], mine: 0, myRank: 0, rankCol: '' };
+// 서버로 보낼 점수: 부술 때마다 pending에 쌓았다가 30초(±6초)마다 묶어서 보냄
+const SEND_MAX = 300000;   // ※ 임시 상한. schema.sql의 c_max_points와 같게 맞출 것
+const Sync = { on: joined(), pending: 0, busy: false, day: todayKST() };
+
+// 오늘 점수는 새로고침해도 이어지게 저장 (보내는 중인 몫은 빼고 저장해서 두 번 더해지지 않게)
+(() => {
+  const t = store.get(DAY_KEY);
+  if (t && t.day === Sync.day) { score = t.score || 0; if (Sync.on) Sync.pending = t.pending || 0; }
+})();
+let savedSig = '';
+function saveToday() {
+  const v = { day: Sync.day, score, pending: Sync.pending }, s = JSON.stringify(v);
+  if (s !== savedSig) { savedSig = s; store.set(DAY_KEY, v); }
+}
+setInterval(() => {
+  const d = todayKST();
+  if (d !== Sync.day) {   // 자정(한국 시간)이 지나면 새 날. 아직 안 보낸 몫은 새 날 점수로 보냄
+    Sync.day = d; score = 0; Rank.mine = 0; Rank.colleges = []; Rank.myRank = 0;
+    if (Rank.kind === 'claude') subscribeClaude();
+    renderBoard(); pollSoon();
+  }
+  saveToday();
+}, 1000);
+
+async function flush(final) {
+  if (!Rank.kind || !Sync.on || Sync.pending <= 0 || (Sync.busy && !final)) return;
+  const pts = Math.min(Sync.pending, SEND_MAX);   // 오래 못 보내 쌓였으면 나눠서 보냄
+  Sync.pending -= pts; Sync.busy = true; saveToday();
+  try {
+    await rankAdd(pts, final);
+  } catch (e) {
+    Sync.pending += pts;   // 실패한 점수는 버리지 않고 다음 전송에 합침
+  } finally {
+    Sync.busy = false;
+  }
+}
+function schedSync() {
+  clearTimeout(Sync.t);
+  Sync.t = setTimeout(() => { if (!document.hidden) flush(false); schedSync(); }, jitter(30000, 6000));
+}
+// 탭을 숨기거나 창을 닫을 때 남은 점수를 보냄. Supabase는 apikey 헤더가 필요해서 sendBeacon 대신 fetch keepalive
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { flush(true); saveToday(); } else pollSoon();
+});
+addEventListener('pagehide', () => { flush(true); saveToday(); });
+
+async function rankAdd(pts, keepalive) {
+  const nick = PREF.mode === 'nick' ? PREF.nick : '', college = PREF.college;
+  if (Rank.kind === 'supabase') {
+    applyBoard(await sbRpc('inu_add', { p_device: DEVICE, p_points: pts, p_nick: nick || null, p_college: college }, keepalive));
+    schedPoll();   // 방금 순위표를 받았으니 다음 조회는 미룸
+  } else if (Rank.kind === 'claude') {
+    // players/{내 id} 문서 하나에 오늘 날짜와 누적 점수를 더함
+    const ref = Rank.db.doc('players/' + Rank.uid), day = todayKST();
+    const snap = await ref.get(), old = snap.exists ? snap.data() : null;
+    const base = old && old.day === day ? Number(old.points) || 0 : 0;
+    await ref.set({ day, points: base + pts, college, nick, anon: !nick, at: Date.now() });
+  }
+}
+
 async function rankInit() {
   // claude.ai 아티팩트 안에서는 내장 db, GitHub Pages에서는 config.json의 Supabase
   if (window.claude && typeof window.claude.use === 'function') {
     try {
       const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
       const id = user ? await user.id() : null;
-      if (db && id) {
-        Rank.kind = 'claude'; Rank.db = db; Rank.uid = id;
-        db.collection('players').where('day', '==', todayKST()).limit(500).onSnapshot(snap => {
-          const rows = snap.docs.map(d => ({ ...d.data(), mine: d.id === id }));
-          Rank.top = rows.slice().sort((a, b) => b.best - a.best).slice(0, 10)
-            .map(r => ({ nick: r.anon ? '' : r.nick, college: r.college, score: r.best, mine: r.mine }));
-          const by = {};
-          for (const r of rows) if (r.college) { const c = by[r.college] || (by[r.college] = { college: r.college, total: 0, people: 0 }); c.total += r.total || 0; c.people++; }
-          Rank.colleges = Object.values(by).sort((a, b) => b.total - a.total);
-          Rank.players = rows.length;
-          Rank.myRank = 1 + rows.filter(r => !r.mine && r.best > (rows.find(x => x.mine) || { best: -1 }).best).length;
-          renderBoard();
-        }, () => { Rank.kind = null; renderBoard(); });
-        return;
-      }
+      if (db && id) { Rank.kind = 'claude'; Rank.db = db; Rank.uid = id; subscribeClaude(); }
     } catch (e) { /* 아래로 */ }
   }
-  try {
-    const r = await fetch('config.json', { cache: 'no-cache' });
-    if (r.ok) {
-      const c = await r.json();
-      if (c.supabaseUrl && c.supabaseKey) { Rank.kind = 'supabase'; Rank.sb = c; await sbLoad(); }
-    }
-  } catch (e) { /* 랭킹 없이 */ }
+  if (!Rank.kind) {
+    try {
+      const r = await fetch('config.json', { cache: 'no-cache' });
+      if (r.ok) {
+        const c = await r.json();
+        if (c.supabaseUrl && c.supabaseKey) { Rank.kind = 'supabase'; Rank.sb = c; sbLoad().catch(() => {}).finally(() => schedPoll()); }
+      }
+    } catch (e) { /* 랭킹 없이 */ }
+  }
+  renderBoard();
+  if (Rank.kind) schedSync();
 }
-async function sbRpc(fn, body) {
+function subscribeClaude() {
+  if (Rank.unsub) Rank.unsub();
+  Rank.unsub = Rank.db.collection('players').where('day', '==', todayKST()).limit(1000).onSnapshot(snap => {
+    const by = {}; let mine = 0;
+    for (const d of snap.docs) {
+      const r = d.data(), pts = Number(r.points) || 0;
+      if (d.id === Rank.uid) mine = pts;
+      if (!CNAME[r.college] || pts <= 0) continue;
+      const c = by[r.college] || (by[r.college] = { college: r.college, total: 0, people: 0 });
+      c.total += pts; c.people++;
+    }
+    applyBoard({ colleges: Object.values(by).sort((a, b) => b.total - a.total), mine });
+  }, () => { Rank.ok = false; renderBoard(); });
+}
+async function sbRpc(fn, body, keepalive) {
   const { supabaseUrl: u, supabaseKey: k } = Rank.sb;
   const r = await fetch(`${u.replace(/\/$/, '')}/rest/v1/rpc/${fn}`, {
-    method: 'POST', headers: { apikey: k, Authorization: `Bearer ${k}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
+    method: 'POST', keepalive: !!keepalive,
+    headers: { apikey: k, Authorization: `Bearer ${k}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
   });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
-async function sbLoad() {
-  const b = await sbRpc('inu_board');
-  Rank.top = (b.top || []).map(t => ({ nick: t.nick || '', college: t.college || '', score: t.score }));
-  Rank.colleges = (b.colleges || []).map(c => ({ college: c.college, total: Number(c.total), people: c.runs, runs: true }));
-  Rank.players = b.runs || 0;
+async function sbLoad() { applyBoard(await sbRpc('inu_board', { p_device: DEVICE })); }
+
+// 순위표 폴링: 화면이 보일 때만. 평소 20~30초, 전체 순위를 펼쳤을 때 8~12초
+function schedPoll(ms) {
+  clearTimeout(Rank.pollT);
+  if (Rank.kind !== 'supabase') return;
+  Rank.pollT = setTimeout(pollTick, ms != null ? ms : ($('#miniPanel').hidden ? jitter(25000, 5000) : jitter(10000, 2000)));
+}
+function pollTick() {
+  if (document.hidden) return;   // 다시 보이면 visibilitychange에서 이어 감
+  sbLoad().catch(() => {}).finally(() => schedPoll());
+}
+function pollSoon() { schedPoll(Math.random() * 3000); }
+
+function applyBoard(b) {
+  Rank.ok = true;
+  Rank.colleges = (b.colleges || []).map(c => ({ college: c.college, total: Number(c.total) || 0, people: Number(c.people) || 0 }));
+  Rank.mine = Number(b.mine) || 0;
+  // 다른 탭에서 번 점수 등으로 서버 쪽이 더 크면 화면 숫자를 맞춰 줌
+  score = Math.max(score, Rank.mine + Sync.pending);
+  // 우리 단과대 순위가 오르면 알려 줌 (처음 불러올 때와 단과대를 바꿨을 때는 빼고)
+  const col = joined() ? PREF.college : '', k = Rank.colleges.findIndex(c => c.college === col) + 1;
+  if (col && col === Rank.rankCol && k && Rank.myRank && k < Rank.myRank)
+    showToast(`${CNAME[col].replace(/대학$/, '대')} ${Rank.myRank}위 → ${k}위!`, '우리 단과대 순위가 올랐어요');
+  Rank.rankCol = col; Rank.myRank = k;
   renderBoard();
 }
-async function rankSubmit(score, nick, college) {
-  if (Rank.kind === 'claude') {
-    const ref = Rank.db.doc('players/' + Rank.uid), day = todayKST();
-    const snap = await ref.get(), old = snap.exists ? snap.data() : null, same = old && old.day === day;
-    await ref.set({
-      day, best: Math.max(same ? old.best : 0, score), total: (same ? old.total : 0) + score, runs: (same ? old.runs : 0) + 1,
-      nick: nick || '', anon: !nick, college: college || '', at: Date.now(),
-    });
-    await new Promise(r => setTimeout(r, 250));
-    return Rank.myRank;
-  }
-  if (Rank.kind === 'supabase') {
-    const rank = await sbRpc('inu_submit', { p_score: score, p_nick: nick || null, p_college: college || null });
-    await sbLoad();
-    return rank;
-  }
-  throw new Error('랭킹 서버 없음');
-}
 
-let tab = 'college';
 function renderMyCol() {
-  const el = $('#mycol'), pf = loadPref(), mine = pf.mode === 'no' ? '' : pf.college;
+  const el = $('#mycol'), mine = joined() ? PREF.college : '';
   if (!Rank.kind || !mine) { el.hidden = true; return; }
   const k = Rank.colleges.findIndex(c => c.college === mine);
-  const short = (CNAME[mine] || mine).replace(/대학$/, '대');
+  const short = CNAME[mine].replace(/대학$/, '대');
   el.textContent = k < 0 ? `${short} 아직 기록 없음` : `${short} ${k + 1}위`;
   el.hidden = false;
 }
-// 서버 랭킹은 랭킹 창이 열려 있으면 10초마다, 아니면 45초마다 새로 받아옴 (claude.ai 안에서는 실시간 구독)
-let pollN = 0;
-setInterval(() => {
-  if (Rank.kind !== 'supabase' || document.hidden) return;
-  pollN++;
-  if ($("#board").open || pollN % 5 === 0) sbLoad().catch(() => {});
-}, 10000);
-function renderBoard() {
-  renderMyCol();
-  const list = $('#boardList'); if (!list) return;
-  list.textContent = '';
-  const myCol = loadPref().college || '';
-  const empty = t => { const li = document.createElement('li'); li.className = 'empty'; li.textContent = t; list.appendChild(li); };
-  if (!Rank.kind) { empty('랭킹 서버에 연결되지 않았어요. 혼자서 부수는 건 그대로 할 수 있어요.'); return; }
-  const row = (no, who, small, pts, mine, barPct) => {
-    const li = document.createElement('li'); if (mine) li.className = 'mine';
-    const a = document.createElement('span'); a.className = 'no'; a.textContent = no;
-    const b = document.createElement('span'); b.className = 'who'; b.textContent = who;
-    if (small) { const s = document.createElement('small'); s.textContent = small; b.appendChild(s); }
-    const c = document.createElement('span'); c.className = 'pts'; c.textContent = pts.toLocaleString();
-    li.append(a, b, c);
-    if (barPct != null) { const bar = document.createElement('span'); bar.className = 'bar'; bar.style.width = barPct + '%'; li.appendChild(bar); }
-    list.appendChild(li);
-  };
-  if (tab === 'college') {
-    if (!Rank.colleges.length) return empty('아직 오늘 기록이 없어요. 우리 단과대 첫 점수를 올려 보세요.');
-    const max = Rank.colleges[0].total || 1;
-    Rank.colleges.forEach((c, k) => row(k + 1, CNAME[c.college] || c.college, `${c.people}${c.runs ? '판' : '명'} 참가`, c.total, c.college === myCol, Math.round(c.total / max * 100)));
-  } else {
-    if (!Rank.top.length) return empty('아직 오늘 기록이 없어요. 1등 자리가 비어 있어요.');
-    Rank.top.forEach((t, k) => row(k + 1, t.nick || '익명', CNAME[t.college] || '', t.score, !!t.mine, null));
+function renderMini() {
+  const box = $('#mini');
+  box.hidden = !Rank.kind;
+  if (!Rank.kind) return;
+  const pod = $('#podium'); pod.textContent = '';
+  if (!Rank.ok) pod.textContent = '랭킹 불러오는 중';
+  else if (!Rank.colleges.length) pod.textContent = '오늘 첫 점수를 기다리는 중';
+  else Rank.colleges.slice(0, 3).forEach((c, k) => {
+    const s = document.createElement('span'), n = document.createElement('b');
+    n.className = 's' + (k + 1); n.textContent = k + 1;
+    s.append(n, CSHORT[c.college] || c.college); pod.appendChild(s);
+  });
+  const m = $('#miniMine'), col = joined() ? PREF.college : '', cs = Rank.colleges;
+  m.classList.toggle('off', !col);
+  if (!col) m.textContent = '참가 안 함';
+  else {
+    const k = cs.findIndex(c => c.college === col);
+    if (k < 0) m.textContent = `우리 ${CSHORT[col]} 0점`;
+    else if (k === 0) m.textContent = cs[1] ? `우리 1위 · +${shortNum(cs[0].total - cs[1].total)}` : '우리 1위';
+    else m.textContent = `우리 ${k + 1}위 · ${k}위까지 ${shortNum(cs[k - 1].total - cs[k].total + 1)}`;
   }
+  $('#boardMe').textContent = col ? '내 정보' : '참가하기';
 }
-document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
-  tab = b.dataset.tab;
-  document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+function renderBoard() {
+  renderMyCol(); renderMini();
+  const list = $('#boardList');
+  if ($('#miniPanel').hidden) return;   // 접혀 있으면 목록은 안 그림
+  list.textContent = '';
+  const empty = t => { const li = document.createElement('li'); li.className = 'empty'; li.textContent = t; list.appendChild(li); };
+  if (!Rank.ok) return empty('랭킹 서버에 연결하는 중이에요. 부수는 건 그대로 할 수 있어요.');
+  if (!Rank.colleges.length) return empty('아직 오늘 기록이 없어요. 우리 단과대 첫 점수를 올려 보세요.');
+  const myCol = joined() ? PREF.college : '', max = Rank.colleges[0].total || 1;
+  Rank.colleges.forEach((c, k) => {
+    const li = document.createElement('li'); if (c.college === myCol) li.className = 'mine';
+    const a = document.createElement('span'); a.className = 'no'; a.textContent = k + 1;
+    const b = document.createElement('span'); b.className = 'who'; b.textContent = CNAME[c.college] || c.college;
+    const s = document.createElement('small'); s.textContent = `${c.people.toLocaleString()}명 참가`; b.appendChild(s);
+    const p = document.createElement('span'); p.className = 'pts'; p.textContent = c.total.toLocaleString();
+    const bar = document.createElement('span'); bar.className = 'bar'; bar.style.width = Math.round(c.total / max * 100) + '%';
+    li.append(a, b, p, bar); list.appendChild(li);
+  });
+}
+function setPanel(open) {
+  $('#miniPanel').hidden = !open;
+  $('#miniBar').setAttribute('aria-expanded', String(open));
   renderBoard();
-}));
+  if (open) pollSoon(); else schedPoll();
+}
+$('#miniBar').addEventListener('click', () => setPanel($('#miniPanel').hidden));
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#miniPanel').hidden && !document.querySelector('dialog[open]')) setPanel(false); });
+// 미니 랭킹을 도구판 바로 위에 붙이기 위해 도구판 높이를 CSS 변수로 넘김
+new ResizeObserver(() => document.documentElement.style.setProperty('--dock-h', $('#dock').offsetHeight + 'px')).observe($('#dock'));
+$('.util .hint').textContent = isTouch ? '끌어서 돌리기, 두 손가락으로 확대' : '끌어서 돌리기, 휠로 확대, 숫자 키 1~5';
 
 function joinMode() { const r = document.querySelector('input[name=join]:checked'); return r ? r.value : 'anon'; }
 function syncJoin() {
@@ -1253,16 +1319,11 @@ function syncJoin() {
   $('#colWrap').hidden = m === 'no';
 }
 document.querySelectorAll('input[name=join]').forEach(r => r.addEventListener('change', syncJoin));
-let afterProfile = null;
-function openProfile(then) {
-  const pref = loadPref();
-  afterProfile = then || null;
-  document.querySelectorAll('input[name=join]').forEach(r => { r.checked = r.value === (pref.mode || 'anon'); });
-  $('#nick').value = pref.nick || ''; $('#college').value = pref.college || '';
+function openProfile() {
+  document.querySelectorAll('input[name=join]').forEach(r => { r.checked = r.value === (PREF.mode || 'anon'); });
+  $('#nick').value = PREF.nick || ''; $('#college').value = PREF.college || '';
   $('#pMsg').textContent = '';
-  $('#pLater').textContent = then ? '이번엔 그냥 할게' : '나중에 할게';
   syncJoin();
-  [$('#result'), $('#board')].forEach(d => d.open && d.close());
   $('#profile').showModal();
 }
 $('#pSave').addEventListener('click', () => {
@@ -1270,52 +1331,18 @@ $('#pSave').addEventListener('click', () => {
   if (m === 'nick' && !nick) { $('#pMsg').textContent = '닉네임을 적어 주세요.'; $('#nick').focus(); return; }
   if (m !== 'no' && !CNAME[college]) { $('#pMsg').textContent = '소속 단과대를 골라 주세요.'; $('#college').focus(); return; }
   savePref({ mode: m, nick: m === 'nick' ? nick : '', college: m === 'no' ? '' : college });
-  const then = afterProfile; afterProfile = null;
-  $('#profile').close(); renderBoard();
-  if (then) then();
+  $('#profile').close();
+  // 단과대를 바꿨으면 순위 상승 알림 기준도 새로 잡음
+  Rank.rankCol = joined() ? PREF.college : '';
+  Rank.myRank = Rank.colleges.findIndex(c => c.college === Rank.rankCol) + 1;
+  renderBoard();
 });
 $('#pLater').addEventListener('click', () => {
-  const p = loadPref(); if (!p.mode) savePref({ ...p, asked: true });
-  const then = afterProfile; afterProfile = null;
+  if (!PREF.mode) savePref({ ...PREF, asked: true });
   $('#profile').close();
-  if (then) then();
 });
-$('#profile').addEventListener('cancel', () => { afterProfile = null; });
 $('#mycol').addEventListener('click', () => openProfile());
-
-function who(p) { return p.mode === 'nick' ? `${CNAME[p.college] || ''} '${p.nick}' 이름으로` : `${CNAME[p.college] || ''} 익명으로`; }
-async function openResult() {
-  const pref = loadPref();
-  $('#rScore').textContent = CH.score.toLocaleString();
-  $('#rSub').textContent = `최고 랭크 ${RANKS[CH.best][0]}, 파괴율 ${CH.pct}%`;
-  CH.sentCollege = '';
-  $('#result').showModal();
-  const msg = $('#rMsg');
-  if (!Rank.kind) { msg.textContent = '랭킹 서버에 연결되지 않아 이번 기록은 올리지 못했어요.'; return; }
-  if (pref.mode !== 'anon' && pref.mode !== 'nick') { msg.textContent = '랭킹에 참가하지 않아서 기록은 나만 봐요. 랭킹 창의 내 정보에서 바꿀 수 있어요.'; return; }
-  if (!CH.score) { msg.textContent = '0점이라 이번 판은 올리지 않았어요.'; return; }
-  msg.textContent = `${who(pref)} 올리는 중`;
-  try {
-    const rank = await rankSubmit(CH.score, pref.mode === 'nick' ? pref.nick : '', pref.college);
-    CH.sentCollege = pref.college;
-    msg.textContent = rank ? `${who(pref)} 올렸어요. 오늘 개인 ${rank}위!` : `${who(pref)} 올렸어요.`;
-  } catch (e) {
-    msg.textContent = '기록을 올리지 못했어요. 인터넷 연결을 확인해 주세요.';
-  }
-}
-$('#submit').addEventListener('click', () => { $('#result').close(); tab = 'college'; openBoard(); });
-$('#result').addEventListener('close', () => { if (CH.phase === 'done') stopChallenge(); });
-$('#again').addEventListener('click', () => { $('#result').close(); startChallenge(); });
-function openBoard() {
-  document.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tab === tab)));
-  renderBoard(); $('#board').showModal();
-  if (Rank.kind === 'supabase') sbLoad().catch(() => {});
-}
-$('#boardBtn').addEventListener('click', openBoard);
-$('#boardClose').addEventListener('click', () => $('#board').close());
 $('#boardMe').addEventListener('click', () => openProfile());
-$('#boardPlay').addEventListener('click', () => { $('#board').close(); startChallenge(); });
-$('#challenge').addEventListener('click', startChallenge);
 rankInit();
 
 /* ---------- 시작 ---------- */
